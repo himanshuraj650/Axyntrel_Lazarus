@@ -1,0 +1,416 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Project Lazarus - Medical Forensic Recovery API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: patients
+    description: Patient data operations
+  - name: telemetry
+    description: Telemetry data operations
+  - name: prescriptions
+    description: Prescription data operations
+  - name: analytics
+    description: Analytics operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /patients:
+    get:
+      operationId: getPatients
+      tags: [patients]
+      summary: Get all decoded patients
+      description: Returns all patients with decoded identities and ward assignments
+      responses:
+        "200":
+          description: List of decoded patients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Patient"
+
+  /patients/{id}:
+    get:
+      operationId: getPatient
+      tags: [patients]
+      summary: Get patient by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Patient details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patient"
+
+  /telemetry:
+    get:
+      operationId: getTelemetry
+      tags: [telemetry]
+      summary: Get telemetry logs
+      description: Returns decoded BPM and interpolated oxygen levels
+      parameters:
+        - name: patientId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+      responses:
+        "200":
+          description: Telemetry data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TelemetryRecord"
+
+  /telemetry/live:
+    get:
+      operationId: getLiveTelemetry
+      tags: [telemetry]
+      summary: Get latest telemetry per patient
+      description: Returns the most recent telemetry record for each patient
+      responses:
+        "200":
+          description: Live telemetry per patient
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LiveVitals"
+
+  /telemetry/alerts:
+    get:
+      operationId: getAlerts
+      tags: [telemetry]
+      summary: Get critical triage alerts
+      description: Returns patients with critical vital signs (BPM outside 60-100)
+      responses:
+        "200":
+          description: Critical alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TriageAlert"
+
+  /prescriptions:
+    get:
+      operationId: getPrescriptions
+      tags: [prescriptions]
+      summary: Get all prescriptions
+      description: Returns prescriptions with scrambled vs decrypted medication names
+      parameters:
+        - name: patientId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Prescription data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Prescription"
+
+  /analytics/summary:
+    get:
+      operationId: getAnalyticsSummary
+      tags: [analytics]
+      summary: Get dashboard analytics summary
+      description: Returns key stats - total patients, critical count, recovery rate, etc.
+      responses:
+        "200":
+          description: Analytics summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsSummary"
+
+  /analytics/anomalies:
+    get:
+      operationId: getAnomalies
+      tags: [analytics]
+      summary: Get anomaly scores per patient
+      description: AI-powered anomaly scoring based on vital patterns
+      responses:
+        "200":
+          description: Anomaly scores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnomalyScore"
+
+  /audit-trail:
+    get:
+      operationId: getAuditTrail
+      tags: [analytics]
+      summary: Get forensic audit trail
+      description: Returns the reconstruction audit log of all data operations
+      responses:
+        "200":
+          description: Audit trail entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditEntry"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Patient:
+      type: object
+      properties:
+        id:
+          type: string
+        decodedName:
+          type: string
+        rawId:
+          type: string
+        age:
+          type: integer
+        ward:
+          type: string
+          enum: [Alpha, Beta]
+        gender:
+          type: string
+        bloodType:
+          type: string
+        admissionDate:
+          type: string
+        anomalyScore:
+          type: number
+        status:
+          type: string
+          enum: [stable, critical, warning, unknown]
+      required:
+        - id
+        - decodedName
+        - age
+        - ward
+        - status
+
+    TelemetryRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        patientId:
+          type: string
+        timestamp:
+          type: string
+        rawHex:
+          type: string
+        bpm:
+          type: number
+        oxygenLevel:
+          type: number
+        interpolated:
+          type: boolean
+        isCritical:
+          type: boolean
+      required:
+        - id
+        - patientId
+        - timestamp
+        - bpm
+        - oxygenLevel
+
+    LiveVitals:
+      type: object
+      properties:
+        patientId:
+          type: string
+        patientName:
+          type: string
+        ward:
+          type: string
+        bpm:
+          type: number
+        oxygenLevel:
+          type: number
+        timestamp:
+          type: string
+        isCritical:
+          type: boolean
+        trend:
+          type: string
+          enum: [rising, falling, stable]
+      required:
+        - patientId
+        - patientName
+        - bpm
+        - oxygenLevel
+        - isCritical
+
+    TriageAlert:
+      type: object
+      properties:
+        patientId:
+          type: string
+        patientName:
+          type: string
+        ward:
+          type: string
+        bpm:
+          type: number
+        oxygenLevel:
+          type: number
+        alertType:
+          type: string
+          enum: [bradycardia, tachycardia, hypoxia, critical]
+        severity:
+          type: string
+          enum: [warning, critical]
+        timestamp:
+          type: string
+      required:
+        - patientId
+        - patientName
+        - bpm
+        - alertType
+        - severity
+
+    Prescription:
+      type: object
+      properties:
+        id:
+          type: string
+        patientId:
+          type: string
+        patientName:
+          type: string
+        scrambledMed:
+          type: string
+        decryptedMed:
+          type: string
+        dosage:
+          type: string
+        frequency:
+          type: string
+        cipher:
+          type: string
+        prescribedDate:
+          type: string
+      required:
+        - id
+        - patientId
+        - scrambledMed
+        - decryptedMed
+
+    AnalyticsSummary:
+      type: object
+      properties:
+        totalPatients:
+          type: integer
+        criticalPatients:
+          type: integer
+        stablePatients:
+          type: integer
+        warningPatients:
+          type: integer
+        totalPrescriptions:
+          type: integer
+        dataIntegrityScore:
+          type: number
+        recoveryProgress:
+          type: number
+        lastUpdated:
+          type: string
+      required:
+        - totalPatients
+        - criticalPatients
+        - stablePatients
+        - totalPrescriptions
+        - dataIntegrityScore
+        - recoveryProgress
+
+    AnomalyScore:
+      type: object
+      properties:
+        patientId:
+          type: string
+        patientName:
+          type: string
+        score:
+          type: number
+        factors:
+          type: array
+          items:
+            type: string
+        riskLevel:
+          type: string
+          enum: [low, medium, high, critical]
+      required:
+        - patientId
+        - score
+        - riskLevel
+
+    AuditEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+        operation:
+          type: string
+        details:
+          type: string
+        status:
+          type: string
+          enum: [success, warning, error]
+        affectedRecords:
+          type: integer
+      required:
+        - id
+        - timestamp
+        - operation
+        - status

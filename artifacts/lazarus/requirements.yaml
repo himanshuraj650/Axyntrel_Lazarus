@@ -1,0 +1,17 @@
+packages:
+  "recharts": "For the live Vitals Integrity Monitor animated line charts"
+  "framer-motion": "For high-quality cyber thriller entrance and scanning animations"
+  "date-fns": "For precise forensic timestamp formatting"
+  "clsx": "Utility for conditionally joining classNames"
+  "tailwind-merge": "Utility for merging tailwind classes"
+  "@radix-ui/react-slot": "Required for accessible component composition"
+  "@radix-ui/react-tooltip": "For data tooltips on forensic evidence"
+
+images:
+  - path: "artifacts/lazarus/public/images/cyber-grid-bg.png"
+    description: "Dark, subtle glowing medical forensic grid background with deep cyan and red scanning artifacts, highly abstract and technical, low opacity"
+    aspect_ratio: "16:9"
+
+notes:
+  - "Assuming React Query hooks are exported directly from @workspace/api-client-react based on standard monorepo patterns."
+  - "Auto-polling set up via refetchInterval on critical endpoints to simulate live dashboard."

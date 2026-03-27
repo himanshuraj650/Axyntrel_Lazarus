@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Project Lazarus - Medical Forensic Recovery"
+version = "1.0.0"
+id = "artifacts/lazarus"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21704
+
+[services.development]
+run = "pnpm --filter @workspace/lazarus run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/lazarus", "run", "build" ]
+publicDir = "artifacts/lazarus/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21704"
+BASE_PATH = "/"
